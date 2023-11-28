@@ -1,0 +1,13 @@
+# Create BAM file list
+ls /project/stuckert/users/amdye/RADseq/new_RADseq/aligned_reads/sam_files/sorted_bam_files/*.bam > all.files
+
+# Sort bam file list
+sort all.files > all.files_sorted
+
+# Run ANGSD to get Beagle file format from BAM files
+ANGSD=/project/stuckert/software/angsd/angsd
+echo $ANGSD
+$ANGSD -GL 2 -out genolike -minInd 5 -doGlf 2 -doMajorMinor 1  -doMaf 2 -SNP_pval 1e-6 -bam all.files_sorted -minMapQ 30 -minQ 20 -doCounts 1 -doDepth 1
+
+# Run PCAngsd to get covariance matrix for PCA analysis in R
+pcangsd -b genolike.beagle.gz -e 2  -o pcangsd_sorted_beagle --selection --admix
