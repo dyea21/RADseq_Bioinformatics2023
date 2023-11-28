@@ -1,0 +1,72 @@
+---
+title: "R Notebook"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+#####PCA#####
+```{r}
+library(ggplot2)
+#install.packages("tibble")
+library(tibble)
+
+#Load the covariance matrix
+cov <- as.matrix(read.table("PCANGSD/pcangsd_sorted_beagle.cov"))
+
+#Add a column with population assingments
+pop <- c('AC','AC','AC','AC','AC','AC','AC','AC','AC','AC','CA','CA','CA','CA','CA','CA','CA','CA','CA','CA','CH','PO','PO','PO','PO','PO','PO','PO','PO','PO','PO','RP','RP','RP','RP','RP','RP','RP','RP','RP','RP','SA','SA','SA','SA','SA','SA','SA','SA','SA','SA','SR','SR','SR','SR','SR','SR','SR','SR','SR','SR')
+morph <- c('striped','striped','striped','striped','striped','striped','striped','striped','striped','striped','hybrid','hybrid','hybrid','hybrid','hybrid','hybrid','hybrid','hybrid','hybrid','hybrid','hybrid','striped','striped','striped','striped','striped','striped','striped','striped','striped','striped','hybrid','hybrid','hybrid','hybrid','hybrid','hybrid','hybrid','hybrid','hybrid','hybrid','banded','banded','banded','banded','banded','banded','banded','banded','banded','banded','banded','banded','banded','banded','banded','banded','banded','banded','banded','banded')
+
+mme.pca <- eigen(cov) #perform the pca using the eigen function. 
+
+eigenvectors = mme.pca$vectors #extract eigenvectors 
+pca.vectors = as_tibble(cbind(pop, data.frame(eigenvectors))) #combine with our population assignments
+
+#Create pca plot
+pca = ggplot(data = pca.vectors, aes(x=X1, y=X2, colour = pop, pch = morph)) + geom_point() + theme(panel.border = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          axis.line = element_line(size = 0.5, linetype = "solid",
+                                   colour = "light gray"))
+pca
+
+#Calculate variance explained by first 4 PCs
+pca.eigenval.sum = sum(mme.pca$values) #sum of eigenvalues
+varPC1 <- (mme.pca$values[1]/pca.eigenval.sum)*100 #Variance explained by PC1
+varPC1
+varPC2 <- (mme.pca$values[2]/pca.eigenval.sum)*100 #Variance explained by PC2
+varPC2
+varPC3 <- (mme.pca$values[3]/pca.eigenval.sum)*100 #Variance explained by PC3
+varPC3
+varPC4 <- (mme.pca$values[4]/pca.eigenval.sum)*100 #Variance explained by PC4
+varPC4
+```
+
+####Adgenet####
+```{r}
+#Use adgenet to identify number of clusters
+genogrp_morphs<-find.clusters(dat1_morphs)
+##number of retained PCs-- 60
+##number of retained clusters-- 3
+
+#Use adgenet to run dapc
+genodapc_morphs<-dapc(dat1_morphs,genogrp_morphs$grp)
+##number of PCs to retain-- 35
+##number of discriminant functions to retain-- 2
+
+#Create scatterplot from dapc results
+scatter(genodapc, scree.da=FALSE, bg="white", pch=20, 
+        cell=0, cstar=0, col=c("#6699CC","#888888","#CC6677"), 
+        solid=.4, cex=3,clab=0, leg=TRUE, txt.leg=paste("Cluster",1:3))
+```
+
+####NGSadmix####
+```{r}
+pop<-read.table("NGSadmix/pop_info.txt",as.is=T)
+q<-read.table("NGSadmix/RAD_NGS_admix_K3.qopt")
+ord<-order(pop[,4])
+barplot(t(q)[,ord],space=0,col=brewer.pal(n = 3, name = "RdYlBu"),border="black",xlab="Individuals",ylab="Admixture proportions for K=3")
+text(tapply(1:nrow(pop),pop[ord,4],mean),-0.05,unique(pop[ord,4]),xpd=T)
+abline(v=cumsum(sapply(unique(pop[ord,3]),function(x){sum(pop[ord,3]==x)})),col=1,lwd=2)
+```
+
