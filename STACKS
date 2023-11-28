@@ -1,0 +1,31 @@
+#!/bin/bash 
+#SBATCH -J populations
+#SBATCH --output populations_%j.log  
+#SBATCH --cpus-per-task=48   
+#SBATCH --mem 140Gb  
+#SBATCH -t 36:00:00  
+
+PATH=$PATH:/project/stuckert/software/stacks-2.64/bin
+echo $PATH
+
+## Run STACKS with population names in population map
+POPMAP=/project/stuckert/users/amdye/RADseq/new_RADseq/pop_maps/population_map.txt
+ref_map.pl -T 10 --popmap $POPMAP -o /project/stuckert/users/amdye/RADseq/new_RADseq/stacks_out_pops \
+--samples /project/stuckert/users/amdye/RADseq/new_RADseq/aligned_reads/sam_files/sorted_bam_files
+
+## Run populations with population names in population map
+populations -P /project/stuckert/users/amdye/RADseq/new_RADseq/stacks_out_pops \
+--popmap $POPMAP  -t 10 -r 0.5 -p 3 --write-random-snp --fstats \
+--treemix --vcf --genepop --hzar --structure \
+-O /project/stuckert/users/amdye/RADseq/new_RADseq/populations_out
+
+## Run STACKS with morph names in population map
+MORPHPOPMAP=/project/stuckert/users/amdye/RADseq/new_RADseq/pop_maps/population_map_morphs.txt
+ref_map.pl -T 10 --popmap $MORPHPOPMAP -o /project/stuckert/users/amdye/RADseq/new_RADseq/stacks_out_morphs \
+--samples /project/stuckert/users/amdye/RADseq/new_RADseq/aligned_reads/sam_files/sorted_bam_files
+
+## Run populations with morph names in population map
+populations -P /project/stuckert/users/amdye/RADseq/new_RADseq/stacks_out_morphs \
+--popmap $MORPHPOPMAP -t 10 -r 0.5 -p 2 --write-random-snp --fstats \
+--treemix --vcf --genepop --hzar --structure \
+-O /project/stuckert/users/amdye/RADseq/new_RADseq/populations_morphs_out
