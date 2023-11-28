@@ -1,3 +1,10 @@
+#!/bin/bash
+#SBATCH -J angsd
+#SBATCH --output angsd_%j.log  
+#SBATCH --cpus-per-task=48   
+#SBATCH --mem 140Gb  
+#SBATCH -t 36:00:00
+
 # Create BAM file list
 ls /project/stuckert/users/amdye/RADseq/new_RADseq/aligned_reads/sam_files/sorted_bam_files/*.bam > all.files
 
@@ -11,3 +18,6 @@ $ANGSD -GL 2 -out genolike -minInd 5 -doGlf 2 -doMajorMinor 1  -doMaf 2 -SNP_pva
 
 # Run PCAngsd to get covariance matrix for PCA analysis in R
 pcangsd -b genolike.beagle.gz -e 2  -o pcangsd_sorted_beagle --selection --admix
+
+# Run NGSadmix with 3 clusters determined from DAPC for admixture proportion plotting in R
+./NGSadmix -likes genolike.beagle.gz -K 3 -seed 21 -o RAD_NGS_admix_K3 -minMaf 0.05
