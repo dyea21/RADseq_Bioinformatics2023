@@ -1,0 +1,91 @@
+---
+title: "SambaR"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+#Install packages, load libraries
+```{r}
+#install.packages("adgenet")
+library(adegenet)
+#install.packages("vcfR")
+library(vcfR)
+#install.packages("hierfstat")
+library(hierfstat)
+#install.packages("pegas")
+library(pegas)
+#install.packages("mmod")
+library(mmod)
+#if (!requireNamespace("BiocManager", quietly = TRUE))
+    #install.packages("BiocManager")
+
+#BiocManager::install("LEA")
+library(LEA)
+#install.packages("StAMPP")
+library(StAMPP)
+source("https://github.com/mennodejong1986/SambaR/raw/master/SAMBAR_v1.08.txt")
+getpackages()
+#install.packages("phangorn")
+library(phangorn)
+```
+
+####POPS#####
+#Input VCF file from STACKS output and change format to GENIND file for adgenet
+```{r}
+vcf <- read.vcfR("populations.snps.vcf");
+dat1 <- vcfR2genind(vcf);
+vcf2lfmm("populations.snps.vcf")
+head(vcf)
+```
+#Create population list for GENIND file that corresponds to individuals, add poplist to data objects
+```{r}
+poplist <-
+  c('AC','AC','AC','AC','AC','AC','AC','AC','AC','AC','CA','CA','CA','CA','CA','CA','CA','CA','CA','CA','CH','PO','PO','PO','PO','PO','PO','PO','PO','PO','PO','RP','RP','RP','RP','RP','RP','RP','RP','RP','RP','SA','SA','SA','SA','SA','SA','SA','SA','SA','SA','SR','SR','SR','SR','SR','SR','SR','SR','SR','SR')
+
+pop(dat1)<-as.factor(poplist)
+
+dat2 <- genind2hierfstat(dat1)
+```
+#Create dat3 genlight object to be used in sambaR, add poplist to data
+```{r}
+dat3 <- vcfR2genlight(vcf)
+pop(dat3)<-as.factor(poplist)
+```
+#Run sambaR with dat3, calculate population genetic statistics
+```{r}
+genlight2sambar("dat3",do_confirm=TRUE,allow_edit=TRUE)
+filterdata(indmiss=1.0,snpmiss=0.1,min_mac=2,dohefilter=TRUE,min_spacing=500,nchroms=12,TsTvfilter=NULL)
+calcdistance(dodistgenpop=FALSE)
+calcdiversity()
+```
+
+#####MORPHS#####
+#Input VCF file from STACKS output and change format to GENIND file for adgenet
+```{r}
+vcf_morphs <- read.vcfR("morphs/input_files/populations.snps.vcf");
+dat1_morphs <- vcfR2genind(vcf);
+vcf2lfmm("morphs/input_files/populations.snps.vcf")
+head(vcf_morphs)
+```
+#Create population list for GENIND file that corresponds to individuals, add poplist to data objects
+```{r}
+poplist_morphs <-
+  c('striped','striped','striped','striped','striped','striped','striped','striped','striped','striped','hybrid','hybrid','hybrid','hybrid','hybrid','hybrid','hybrid','hybrid','hybrid','hybrid','hybrid','striped','striped','striped','striped','striped','striped','striped','striped','striped','striped','hybrid','hybrid','hybrid','hybrid','hybrid','hybrid','hybrid','hybrid','hybrid','hybrid','banded','banded','banded','banded','banded','banded','banded','banded','banded','banded','banded','banded','banded','banded','banded','banded','banded','banded','banded','banded')
+
+pop(dat1_morphs)<-as.factor(poplist_morphs)
+
+dat2_morphs <- genind2hierfstat(dat1_morphs)
+```
+#Create dat3 genlight object to be used in sambaR, add poplist to data
+```{r}
+dat3_morphs <- vcfR2genlight(vcf_morphs)
+pop(dat3_morphs)<-as.factor(poplist_morphs)
+```
+#Run sambaR with dat3, calculate population genetic statistics
+```{r}
+genlight2sambar("dat3_morphs",do_confirm=TRUE,allow_edit=TRUE)
+filterdata(indmiss=1.0,snpmiss=0.1,min_mac=2,dohefilter=TRUE,min_spacing=500,nchroms=12,TsTvfilter=NULL)
+calcdistance(dodistgenpop=FALSE)
+calcdiversity()
+```
