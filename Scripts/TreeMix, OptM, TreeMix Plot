@@ -1,0 +1,32 @@
+# Run TreeMix to test 5 migration edges with 20 bootstrap replicates
+conda activate treemix
+
+for m in {1..5} # test 5 migration edges
+do
+for i in {1..20} # 20 iterations
+do
+s=$RANDOM
+echo "Random seed = ${s}"
+treemix -i populations.treemix.gz -o test_migrations/r_imi.${i}.${m} -m ${m} -k 100 -seed ${s} -bootstrap #block size of 100 and bootstrapping
+done 
+done
+
+# OptM in R to test for optimal number of migration edges
+library(OptM)
+folder <- file.path(path="treemix_test_shit/new_treemix/test_migrations/") 
+
+test.linear = optM(folder, method = "linear", tsv="linear.txt") 
+plot_optM(test.linear, method = "linear")
+
+test.optM = optM(folder, tsv ="Evanno.variance.txt") 
+plot_optM(test.optM, method = "Evanno") 
+
+#Gather ln(likelihood) values for each iteration with 1 migration edge
+grep "Exiting ln(likelihood) with 1 migration events" *llik > all.llik.txt
+
+# Choose highest ln(likelihood) value to plot in R
+
+# Plot TreeMix plots in R
+source("/Users/ashleydye/Documents/UH Fall 2023/radseq/treemix-1.13/src/plotting_funcs.R")
+plot_tree("treemix_test_shit/new_treemix/final_runsk1/bootstrap_consense/r_imi.8.1")
+plot_tree("treemix_test_shit/new_treemix/final_runsk1/bootstrap_consense/r_imi.4.1")
